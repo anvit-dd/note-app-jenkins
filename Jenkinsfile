@@ -107,11 +107,9 @@ pipeline {
 							REMOTE_RUN_COMMAND="${DEPLOY_RUN_COMMAND:-docker run -d --restart unless-stopped --name ${CONTAINER_NAME} -p ${APP_PORT_VALUE}:${APP_PORT_VALUE} ${DOCKER_IMAGE_NAME}:latest}"
 
 							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
-
-							# Check if sshpass is available and password is set
 							if command -v sshpass >/dev/null 2>&1 && [ -n "$DEPLOY_PASSWORD" ]; then
 								echo "🔑 Using password authentication with sshpass..."
-								sshpass -p "$DEPLOY_PASSWORD" ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+								ssh -i "$DEPLOY_PASSWORD" -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
 set -eu
 
 echo "🛑 Stopping running containers..."
