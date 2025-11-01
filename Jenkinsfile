@@ -61,33 +61,33 @@ pipeline {
 			}
 		}
 
-		stage('Package') {
-			steps {
-				echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
-				echo '📦 Building and pushing Docker image...'
-				sh '''
-					# Ensure required environment variables are set
-					if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_PASS" ]; then
-						echo "❌ Missing Docker credentials in environment variables (DOCKER_USER / DOCKER_PASS)"
-						exit 1
-					fi
+		// stage('Package') {
+		// 	steps {
+		// 		echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
+		// 		echo '📦 Building and pushing Docker image...'
+		// 		sh '''
+		// 			# Ensure required environment variables are set
+		// 			if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_PASS" ]; then
+		// 				echo "❌ Missing Docker credentials in environment variables (DOCKER_USER / DOCKER_PASS)"
+		// 				exit 1
+		// 			fi
 
-					echo "🔑 Logging in to Docker registry..."
-					echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin docker.io
+		// 			echo "🔑 Logging in to Docker registry..."
+		// 			echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin docker.io
 
-					echo "🐳 Building Docker image..."
-					docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} .
-					docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_IMAGE_NAME}:latest
+		// 			echo "🐳 Building Docker image..."
+		// 			docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} .
+		// 			docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_IMAGE_NAME}:latest
 
-					echo "⬆️  Pushing image to Docker registry..."
-					docker push ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}
-					docker push ${DOCKER_IMAGE_NAME}:latest
+		// 			echo "⬆️  Pushing image to Docker registry..."
+		// 			docker push ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}
+		// 			docker push ${DOCKER_IMAGE_NAME}:latest
 
-					docker logout docker.io
-					echo "✅ Docker image pushed successfully: ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
-				'''
-			}
-		}
+		// 			docker logout docker.io
+		// 			echo "✅ Docker image pushed successfully: ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+		// 		'''
+		// 	}
+		// }
 
 		stage('Deploy') {
 			steps {
@@ -108,26 +108,46 @@ pipeline {
 
 							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
 
-							ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+							# Check if sshpass is available for password authentication
+							if command -v sshpass >/dev/null 2>&1 && [ -n "$DEPLOY_PASSWORD" ]; then
+								echo "🔑 Using password authentication with sshpass..."
+								sshpass -p "$DEPLOY_PASSWORD" ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
 set -eu
 
 echo "🛑 Stopping running containers..."
-CONTAINERS=\$(docker ps -q)
-if [ -n "\$CONTAINERS" ]; then
-	docker stop \$CONTAINERS
-fi
+docker ps -q | xargs -r sudo docker stop || true
 
 echo "🧹 Removing container ${CONTAINER_NAME} if it exists..."
-docker rm -f ${CONTAINER_NAME} || true
+sudo docker rm -f ${CONTAINER_NAME} || true
 
 echo "⬇️  Pulling latest image ${DOCKER_IMAGE_NAME}:latest..."
-docker pull ${DOCKER_IMAGE_NAME}:latest
+sudo docker pull ${DOCKER_IMAGE_NAME}:latest
 
 echo "🚀 Starting container with latest image..."
 ${REMOTE_RUN_COMMAND}
 
-docker ps --filter "name=${CONTAINER_NAME}"
+sudo docker ps --filter "name=${CONTAINER_NAME}"
 EOF
+							else
+								echo "🔑 Using SSH key authentication..."
+								ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+set -eu
+
+echo "🛑 Stopping running containers..."
+docker ps -q | xargs -r sudo docker stop || true
+
+echo "🧹 Removing container ${CONTAINER_NAME} if it exists..."
+sudo docker rm -f ${CONTAINER_NAME} || true
+
+echo "⬇️  Pulling latest image ${DOCKER_IMAGE_NAME}:latest..."
+sudo docker pull ${DOCKER_IMAGE_NAME}:latest
+
+echo "🚀 Starting container with latest image..."
+${REMOTE_RUN_COMMAND}
+
+sudo docker ps --filter "name=${CONTAINER_NAME}"
+EOF
+							fi
 						'''
 					}
 
