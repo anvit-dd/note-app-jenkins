@@ -1,0 +1,64 @@
+# Files to ignore during Jenkins builds
+# This helps reduce build time and artifact size
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Next.js
+.next/
+out/
+.next-swc/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+TESTING.md
+*.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Misc
+*.pem
+.cache/
+
