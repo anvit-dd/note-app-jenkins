@@ -1,5 +1,6 @@
 import { GET, PUT, DELETE } from '@/app/api/notes/[id]/route'
 import { getServerSession } from 'next-auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Mock dependencies
@@ -17,6 +18,9 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+type RouteParams = { params: Promise<{ id: string }> }
+type RouteParamsSync = { params: { id: string } }
+
 describe('/api/notes/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -27,11 +31,11 @@ describe('/api/notes/[id]', () => {
       ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
       const params = Promise.resolve({ id: 'note-1' })
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -61,11 +65,11 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(mockNote)
 
       const params = Promise.resolve({ id: 'note-1' })
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -83,11 +87,11 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(null)
 
       const params = Promise.resolve({ id: 'note-999' })
-      const request = new Request('http://localhost:3000/api/notes/note-999', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-999', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -100,13 +104,13 @@ describe('/api/notes/[id]', () => {
       ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
       const params = { id: 'note-1' }
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title' }),
       })
 
-      const response = await PUT(request, { params } as any)
+      const response = await PUT(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -142,7 +146,7 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.update as jest.Mock).mockResolvedValue(updatedNote)
 
       const params = { id: 'note-1' }
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -151,7 +155,7 @@ describe('/api/notes/[id]', () => {
         }),
       })
 
-      const response = await PUT(request, { params } as any)
+      const response = await PUT(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -169,13 +173,13 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(null)
 
       const params = { id: 'note-999' }
-      const request = new Request('http://localhost:3000/api/notes/note-999', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-999', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Updated Title' }),
       })
 
-      const response = await PUT(request, { params } as any)
+      const response = await PUT(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -197,13 +201,13 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(existingNote)
 
       const params = { id: 'note-1' }
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: '' }), // Invalid: empty title
       })
 
-      const response = await PUT(request, { params } as any)
+      const response = await PUT(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -216,11 +220,11 @@ describe('/api/notes/[id]', () => {
       ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
       const params = { id: 'note-1' }
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -241,11 +245,11 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.delete as jest.Mock).mockResolvedValue(existingNote)
 
       const params = { id: 'note-1' }
-      const request = new Request('http://localhost:3000/api/notes/note-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -262,11 +266,11 @@ describe('/api/notes/[id]', () => {
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(null)
 
       const params = { id: 'note-999' }
-      const request = new Request('http://localhost:3000/api/notes/note-999', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-999', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParamsSync)
       const data = await response.json()
 
       expect(response.status).toBe(404)

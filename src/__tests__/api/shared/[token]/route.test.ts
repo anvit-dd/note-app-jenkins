@@ -1,4 +1,5 @@
 import { GET } from '@/app/api/shared/[token]/route'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Mock dependencies
@@ -10,6 +11,8 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+type RouteParams = { params: Promise<{ token: string }> }
+
 describe('/api/shared/[token]', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -20,11 +23,11 @@ describe('/api/shared/[token]', () => {
       ;(prisma.shareLink.findUnique as jest.Mock).mockResolvedValue(null)
 
       const params = Promise.resolve({ token: 'invalid-token' })
-      const request = new Request('http://localhost:3000/api/shared/invalid-token', {
+      const request = new NextRequest('http://localhost:3000/api/shared/invalid-token', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -54,11 +57,11 @@ describe('/api/shared/[token]', () => {
       ;(prisma.shareLink.findUnique as jest.Mock).mockResolvedValue(expiredLink)
 
       const params = Promise.resolve({ token: 'expired-token' })
-      const request = new Request('http://localhost:3000/api/shared/expired-token', {
+      const request = new NextRequest('http://localhost:3000/api/shared/expired-token', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(410)
@@ -88,11 +91,11 @@ describe('/api/shared/[token]', () => {
       ;(prisma.shareLink.findUnique as jest.Mock).mockResolvedValue(validLink)
 
       const params = Promise.resolve({ token: 'valid-token' })
-      const request = new Request('http://localhost:3000/api/shared/valid-token', {
+      const request = new NextRequest('http://localhost:3000/api/shared/valid-token', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -131,11 +134,11 @@ describe('/api/shared/[token]', () => {
       ;(prisma.shareLink.findUnique as jest.Mock).mockResolvedValue(validLink)
 
       const params = Promise.resolve({ token: 'valid-token' })
-      const request = new Request('http://localhost:3000/api/shared/valid-token', {
+      const request = new NextRequest('http://localhost:3000/api/shared/valid-token', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -148,11 +151,11 @@ describe('/api/shared/[token]', () => {
       )
 
       const params = Promise.resolve({ token: 'valid-token' })
-      const request = new Request('http://localhost:3000/api/shared/valid-token', {
+      const request = new NextRequest('http://localhost:3000/api/shared/valid-token', {
         method: 'GET',
       })
 
-      const response = await GET(request, { params } as any)
+      const response = await GET(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(500)

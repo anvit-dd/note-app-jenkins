@@ -1,5 +1,6 @@
 import { DELETE } from '@/app/api/share/[id]/route'
 import { getServerSession } from 'next-auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Mock dependencies
@@ -16,6 +17,8 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+type RouteParams = { params: { id: string } }
+
 describe('/api/share/[id]', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -26,11 +29,11 @@ describe('/api/share/[id]', () => {
       ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
       const params = { id: 'share-link-1' }
-      const request = new Request('http://localhost:3000/api/share/share-link-1', {
+      const request = new NextRequest('http://localhost:3000/api/share/share-link-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -51,11 +54,11 @@ describe('/api/share/[id]', () => {
       ;(prisma.shareLink.delete as jest.Mock).mockResolvedValue(mockShareLink)
 
       const params = { id: 'share-link-1' }
-      const request = new Request('http://localhost:3000/api/share/share-link-1', {
+      const request = new NextRequest('http://localhost:3000/api/share/share-link-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -72,11 +75,11 @@ describe('/api/share/[id]', () => {
       ;(prisma.shareLink.findFirst as jest.Mock).mockResolvedValue(null)
 
       const params = { id: 'share-link-999' }
-      const request = new Request('http://localhost:3000/api/share/share-link-999', {
+      const request = new NextRequest('http://localhost:3000/api/share/share-link-999', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(404)
@@ -92,11 +95,11 @@ describe('/api/share/[id]', () => {
       )
 
       const params = { id: 'share-link-1' }
-      const request = new Request('http://localhost:3000/api/share/share-link-1', {
+      const request = new NextRequest('http://localhost:3000/api/share/share-link-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(500)

@@ -1,6 +1,4 @@
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
 
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -22,13 +20,13 @@ describe('Auth Configuration', () => {
 
   it('should have correct session configuration', () => {
     expect(authOptions.session).toBeDefined()
-    expect(authOptions.session.strategy).toBe('jwt')
-    expect(authOptions.session.maxAge).toBe(30 * 24 * 60 * 60) // 30 days
+    expect(authOptions.session!.strategy).toBe('jwt')
+    expect(authOptions.session!.maxAge).toBe(30 * 24 * 60 * 60) // 30 days
   })
 
   it('should have correct JWT configuration', () => {
     expect(authOptions.jwt).toBeDefined()
-    expect(authOptions.jwt.maxAge).toBe(30 * 24 * 60 * 60) // 30 days
+    expect(authOptions.jwt!.maxAge).toBe(30 * 24 * 60 * 60) // 30 days
   })
 
   it('should have a CredentialsProvider', () => {
@@ -37,6 +35,7 @@ describe('Auth Configuration', () => {
   })
 
   describe('Credentials Provider', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const credentialsProvider = authOptions.providers[0] as any
 
     it('should have correct name', () => {
@@ -55,16 +54,20 @@ describe('Auth Configuration', () => {
 
   describe('JWT callback', () => {
     it('should add role to token when user is present', async () => {
-      const token = {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const token = {} as any
       const user = { id: 'user-123', role: 'ADMIN' }
-      const result = await authOptions.callbacks!.jwt!({ token, user, account: null, profile: null } as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await authOptions.callbacks!.jwt!({ token, user, account: null, profile: undefined } as any)
 
       expect(result.role).toBe('ADMIN')
     })
 
     it('should not modify token when user is absent', async () => {
-      const token = { role: 'USER' }
-      const result = await authOptions.callbacks!.jwt!({ token, user: undefined, account: null, profile: null } as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const token = { role: 'USER' } as any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await authOptions.callbacks!.jwt!({ token, account: null, profile: undefined } as any)
 
       expect(result.role).toBe('USER')
     })
@@ -76,12 +79,15 @@ describe('Auth Configuration', () => {
         user: {
           email: 'test@example.com',
           name: 'Test User',
-        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
         expires: new Date().toISOString(),
       }
-      const token = { sub: 'user-123', role: 'ADMIN' }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const token = { sub: 'user-123', role: 'ADMIN' } as any
 
-      const result = await authOptions.callbacks!.session!({ session, token, user: null } as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await authOptions.callbacks!.session!({ session, token } as any) as any
 
       expect(result.user.id).toBe('user-123')
       expect(result.user.role).toBe('ADMIN')

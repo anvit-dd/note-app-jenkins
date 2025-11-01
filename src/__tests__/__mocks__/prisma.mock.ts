@@ -1,10 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 
-export const createMockPrismaClient = () => {
-  const notes: any[] = []
-  const users: any[] = []
-  const shareLinks: any[] = []
-
+export const createMockPrismaClient = (): jest.Mocked<PrismaClient> => {
   return {
     note: {
       findMany: jest.fn(),
@@ -30,7 +26,7 @@ export const createMockPrismaClient = () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
-  } as any as PrismaClient
+  } as jest.Mocked<PrismaClient>
 }
 
 export const mockPrisma = createMockPrismaClient()

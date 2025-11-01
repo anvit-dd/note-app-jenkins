@@ -10,7 +10,6 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { TipTapEditor } from "@/components/editor/tiptap-editor";
 import {
@@ -186,7 +185,7 @@ export default function EditorPage() {
 			setCopied(true);
 			toast.success("Link copied to clipboard!");
 			setTimeout(() => setCopied(false), 2000);
-		} catch (error) {
+		} catch {
 			toast.error("Failed to copy link");
 		}
 	};

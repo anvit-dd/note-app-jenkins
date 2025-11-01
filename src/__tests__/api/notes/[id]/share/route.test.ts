@@ -1,5 +1,6 @@
 import { POST, GET, DELETE } from '@/app/api/notes/[id]/share/route'
 import { getServerSession } from 'next-auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // Mock dependencies
@@ -27,8 +28,7 @@ jest.mock('crypto', () => ({
   })),
 }))
 
-// Mock environment variable
-process.env.NEXTAUTH_URL = 'http://localhost:3000'
+type RouteParams = { params: Promise<{ id: string }> }
 
 describe('/api/notes/[id]/share', () => {
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe('/api/notes/[id]/share', () => {
     it('should return 401 if user is not authenticated', async () => {
       ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
-      const request = new Request('http://localhost:3000/api/notes/note-1/share', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ noteId: 'note-1' }),
@@ -76,7 +76,7 @@ describe('/api/notes/[id]/share', () => {
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(mockNote)
       ;(prisma.shareLink.create as jest.Mock).mockResolvedValue(mockShareLink)
 
-      const request = new Request('http://localhost:3000/api/notes/note-1/share', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ noteId: 'note-1' }),
@@ -96,7 +96,7 @@ describe('/api/notes/[id]/share', () => {
       })
       ;(prisma.note.findFirst as jest.Mock).mockResolvedValue(null)
 
-      const request = new Request('http://localhost:3000/api/notes/note-999/share', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-999/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ noteId: 'note-999' }),
@@ -114,7 +114,7 @@ describe('/api/notes/[id]/share', () => {
         user: { id: 'user-123' },
       })
 
-      const request = new Request('http://localhost:3000/api/notes/note-1/share', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1/share', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}), // Missing noteId
@@ -174,11 +174,11 @@ describe('/api/notes/[id]/share', () => {
       ;(getServerSession as jest.Mock).mockResolvedValue(null)
 
       const params = Promise.resolve({ id: 'share-link-1' })
-      const request = new Request('http://localhost:3000/api/notes/note-1/share/share-link-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1/share/share-link-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(401)
@@ -199,11 +199,11 @@ describe('/api/notes/[id]/share', () => {
       ;(prisma.shareLink.delete as jest.Mock).mockResolvedValue(mockShareLink)
 
       const params = Promise.resolve({ id: 'share-link-1' })
-      const request = new Request('http://localhost:3000/api/notes/note-1/share/share-link-1', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1/share/share-link-1', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -220,11 +220,11 @@ describe('/api/notes/[id]/share', () => {
       ;(prisma.shareLink.findFirst as jest.Mock).mockResolvedValue(null)
 
       const params = Promise.resolve({ id: 'share-link-999' })
-      const request = new Request('http://localhost:3000/api/notes/note-1/share/share-link-999', {
+      const request = new NextRequest('http://localhost:3000/api/notes/note-1/share/share-link-999', {
         method: 'DELETE',
       })
 
-      const response = await DELETE(request, { params } as any)
+      const response = await DELETE(request, { params } as RouteParams)
       const data = await response.json()
 
       expect(response.status).toBe(404)

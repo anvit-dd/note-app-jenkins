@@ -32,7 +32,7 @@ import {
 	Undo,
 	Redo,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useLayoutEffect } from "react";
 
 interface TipTapEditorProps {
 	content: string;
@@ -47,8 +47,8 @@ export function TipTapEditor({
 }: TipTapEditorProps) {
 	const [isMounted, setIsMounted] = useState(false);
 
-	useEffect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+	useLayoutEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setIsMounted(true);
 	}, []);
 
