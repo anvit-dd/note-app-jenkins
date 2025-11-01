@@ -109,7 +109,8 @@ pipeline {
 							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
 
 							echo "🔑 Using password authentication with sshpass..."
-							sshpass -p "$DEPLOY_PASSWORD" ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+                            sudo apt-get install -y sshpass
+sshpass -p "$DEPLOY_PASSWORD" ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
 set -eu
 
 echo "🛑 Stopping running containers..."
