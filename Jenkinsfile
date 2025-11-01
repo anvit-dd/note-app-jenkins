@@ -86,33 +86,7 @@ pipeline {
     }
 }
 
-        stage('Deploy') {
-            steps {
-                echo '🚀 Deploying to production server...'
-                sh '''
-                    # SSH into server with username/password and deploy Docker container
-                    sshpass -p "${DEPLOY_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${DEPLOY_USER}@${DEPLOY_SERVER} << 'EOF'
-                        echo "🐳 Pulling latest Docker image..."
-                        docker pull ${DOCKER_IMAGE_NAME}:latest
-                        
-                        echo "🛑 Stopping old container..."
-                        docker stop note-app-container || true
-                        docker rm note-app-container || true
-                        
-                        echo "🚀 Starting new container..."
-                        docker run -d \
-                            --name note-app-container \
-                            -p 3000:3000 \
-                            --restart unless-stopped \
-                            --env-file /etc/note-app/.env.production \
-                            ${DOCKER_IMAGE_NAME}:latest
-                        
-                        echo "✅ Container deployed successfully!"
-                        docker ps | grep note-app-container
-EOF
-                '''
-            }
-        }
+    }
 
     post {
         success {
