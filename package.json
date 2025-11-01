@@ -11,7 +11,7 @@
 		"test": "jest",
 		"test:watch": "jest --watch",
 		"test:coverage": "jest --coverage",
-		"postinstall": "node scripts/setup-lightningcss-wasm.mjs && node scripts/setup-tailwindcss-wasi.mjs"
+		"postinstall": "prisma generate && node scripts/setup-lightningcss-wasm.mjs && node scripts/setup-tailwindcss-wasi.mjs"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.7.4",

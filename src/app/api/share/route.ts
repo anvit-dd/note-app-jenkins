@@ -31,14 +31,16 @@ export async function GET() {
 			},
 		});
 
-		const formattedLinks = shareLinks.map((link: typeof shareLinks[number]) => ({
-			id: link.id,
-			token: link.token,
-			expiresAt: link.expiresAt,
-			shareUrl: `${process.env.NEXTAUTH_URL}/shared/${link.token}`,
-			note: link.note,
-			createdAt: link.createdAt,
-		}));
+		const formattedLinks = shareLinks.map(
+			(link: (typeof shareLinks)[number]) => ({
+				id: link.id,
+				token: link.token,
+				expiresAt: link.expiresAt,
+				shareUrl: `${process.env.NEXTAUTH_URL}/shared/${link.token}`,
+				note: link.note,
+				createdAt: link.createdAt,
+			})
+		);
 
 		return NextResponse.json(formattedLinks);
 	} catch (error) {
