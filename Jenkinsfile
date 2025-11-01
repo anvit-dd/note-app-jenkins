@@ -13,7 +13,7 @@ pipeline {
 		DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/${DOCKER_USER}/${JOB_NAME}"
         DEPLOY_USER = "${DEPLOY_USER}"
         DEPLOY_HOST = "${DEPLOY_SERVER}"
-        DEPLOY_PASSWORD = "${DEPLOY_PASS}"
+        DEPLOY_SSH_PASSWORD_ID = "deploy-ssh-password"
 	}
 
 	options {
@@ -97,7 +97,15 @@ pipeline {
 						return
 					}
 
-					def deployStep = {
+					def credentialId = env.DEPLOY_SSH_PASSWORD_ID?.trim()
+					if (!credentialId) {
+						echo "❌ DEPLOY_SSH_PASSWORD_ID is not set!"
+						echo "   Please add SSH password in Jenkins Credentials and set:"
+						echo "   DEPLOY_SSH_PASSWORD_ID = <credential-id>"
+						error("SSH password credentials not configured")
+					}
+
+					withCredentials([string(credentialsId: credentialId, variable: 'DEPLOY_PASSWORD')]) {
 						sh '''
 							set -eu
 
@@ -108,9 +116,10 @@ pipeline {
 
 							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
 
-							echo "🔑 Using password authentication with sshpass..."
-                            sudo apt-get install -y sshpass
-sshpass -p "$DEPLOY_PASSWORD" ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+							echo "🔑 Using password authentication via SSH..."
+							
+							# Use ssh with stdin for password (without needing external tools)
+							ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
 set -eu
 
 echo "🛑 Stopping running containers..."
@@ -128,15 +137,6 @@ ${REMOTE_RUN_COMMAND}
 sudo docker ps --filter "name=${CONTAINER_NAME}"
 EOF
 						'''
-					}
-
-					def credentialId = env.DEPLOY_SSH_CREDENTIALS_ID?.trim()
-					if (credentialId) {
-						sshagent(credentials: [credentialId]) {
-							deployStep()
-						}
-					} else {
-						deployStep()
 					}
 				}
 			}
