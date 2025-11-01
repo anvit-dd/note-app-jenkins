@@ -57,12 +57,16 @@ pipeline {
                 }
             }
         }
+        agent {
+            docker {
+                image 'docker:27.0'     // or latest version
+                args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+            }
+        }
 
         stage('Package') {
     steps {
         echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
-        sh 'npm run build'
-
         echo '📦 Building and pushing Docker image...'
         sh '''
             # Ensure required environment variables are set
