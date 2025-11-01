@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
+        NEXT_SWC_PATH = "${WORKSPACE}/node_modules/@next/swc-wasm-nodejs/wasm.js"
     }
 
     options {
@@ -26,7 +27,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo '📦 Installing dependencies (including dev)...'
-                sh 'npm i --include=dev'
+                sh 'npm ci --include=dev'
             }
         }
 
@@ -45,10 +46,11 @@ pipeline {
             post {
                 always {
                     junit allowEmptyResults: true, testResults: '**/junit.xml'
-                    publishCoverage adapters: [
-                        coberturaAdapter('coverage/cobertura-coverage.xml'),
-                        lcovAdapter('coverage/lcov.info')
-                    ]
+                    script {
+                        if (fileExists('coverage/lcov.info')) {
+                            archiveArtifacts artifacts: 'coverage/**', allowEmptyArchive: true
+                        }
+                    }
                 }
             }
         }
