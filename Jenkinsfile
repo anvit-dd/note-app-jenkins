@@ -15,6 +15,12 @@ pipeline {
         NPM_REGISTRY = 'https://registry.npmjs.org/'
     }
 
+    tools {
+        // Uncomment and configure if Node.js plugin is installed in Jenkins
+        // Replace 'NodeJS-20' with the name of your Node.js installation in Jenkins
+        // nodejs 'NodeJS-20'
+    }
+
     stages {
         stage('Git Code Checkout') {
             steps {
@@ -49,10 +55,22 @@ pipeline {
                 script {
                     echo '📦 Installing Node.js dependencies...'
                     sh '''
-                        node --version
-                        npm --version
+                        echo "Checking Node.js and npm versions..."
+                        node --version || { echo "ERROR: Node.js not found!"; exit 1; }
+                        npm --version || { echo "ERROR: npm not found!"; exit 1; }
+                        
+                        echo "Checking for package-lock.json..."
+                        if [ ! -f package-lock.json ]; then
+                            echo "⚠️  package-lock.json not found, generating it..."
+                            npm install --package-lock-only
+                        fi
+                        
+                        echo "Installing dependencies with npm ci..."
+                        npm ci --prefer-offline --no-audit || {
+                            echo "⚠️  npm ci failed, trying npm install as fallback..."
+                            npm install --no-audit
+                        }
                     '''
-                    sh 'npm ci --prefer-offline --no-audit'
                 }
             }
             post {
@@ -61,6 +79,12 @@ pipeline {
                 }
                 failure {
                     echo '❌ Failed to install dependencies'
+                    echo 'Please check the console output above for detailed error messages'
+                    echo 'Common issues:'
+                    echo '  - Node.js/npm not installed or not in PATH'
+                    echo '  - Missing package-lock.json file'
+                    echo '  - Network connectivity issues'
+                    echo '  - Disk space issues'
                     error('Dependency installation failed')
                 }
             }
