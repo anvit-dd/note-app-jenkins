@@ -13,7 +13,7 @@ pipeline {
 		DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/${DOCKER_USER}/${JOB_NAME}"
         DEPLOY_USERNAME = "${DEPLOY_USER}"
         DEPLOY_SERVER = "${DEPLOY_SERVER}"
-        DEPLOY_PASSWORD = "${DEPLOY_PASSWORD}"
+        DEPLOY_PASSWORD = "${DEPLOY_PASS}"
 	}
 
 	options {
@@ -98,37 +98,36 @@ pipeline {
 					}
 
 					def deployStep = {
-                        sh '''
-                            set -eu
+						sh '''
+							set -eu
 
-                            SSH_PORT="${DEPLOY_SSH_PORT:-22}"
-                            CONTAINER_NAME="${DOCKER_CONTAINER_NAME:-note-app}"
-                            APP_PORT_VALUE="${APP_PORT:-3000}"
-                            REMOTE_RUN_COMMAND="${DEPLOY_RUN_COMMAND:-docker run -d --restart unless-stopped --name ${CONTAINER_NAME} -p ${APP_PORT_VALUE}:${APP_PORT_VALUE} ${DOCKER_IMAGE_NAME}:latest}"
+							SSH_PORT="${DEPLOY_SSH_PORT:-22}"
+							CONTAINER_NAME="${DOCKER_CONTAINER_NAME:-note-app}"
+							APP_PORT_VALUE="${APP_PORT:-3000}"
+							REMOTE_RUN_COMMAND="${DEPLOY_RUN_COMMAND:-docker run -d --restart unless-stopped --name ${CONTAINER_NAME} -p ${APP_PORT_VALUE}:${APP_PORT_VALUE} ${DOCKER_IMAGE_NAME}:latest}"
 
-                            echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
+							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
 
-                            ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
-    set -eu
+							ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+set -eu
 
-    echo "🛑 Stopping running containers..."
-    CONTAINERS=\$(docker ps -q)
-    if [ -n "\$CONTAINERS" ]; then
-        docker stop \$CONTAINERS
-    fi
+echo "🛑 Stopping running containers..."
+CONTAINERS=\$(docker ps -q)
+if [ -n "\$CONTAINERS" ]; then
+	docker stop \$CONTAINERS
+fi
 
-    echo "🧹 Removing container ${CONTAINER_NAME} if it exists..."
-    docker rm -f ${CONTAINER_NAME} || true
+echo "🧹 Removing container ${CONTAINER_NAME} if it exists..."
+docker rm -f ${CONTAINER_NAME} || true
 
-    echo "⬇️  Pulling latest image ${DOCKER_IMAGE_NAME}:latest..."
-    docker pull ${DOCKER_IMAGE_NAME}:latest
+echo "⬇️  Pulling latest image ${DOCKER_IMAGE_NAME}:latest..."
+docker pull ${DOCKER_IMAGE_NAME}:latest
 
-    echo "🚀 Starting container with latest image..."
-    ${REMOTE_RUN_COMMAND}
+echo "🚀 Starting container with latest image..."
+${REMOTE_RUN_COMMAND}
 
-    docker ps --filter "name=${CONTAINER_NAME}"
-    EOF
-                        '''
+docker ps --filter "name=${CONTAINER_NAME}"
+EOF
 						'''
 					}
 
