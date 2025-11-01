@@ -33,7 +33,8 @@ pipeline {
         stage('Lint') {
             steps {
                 echo '🔍 Running ESLint...'
-                sh 'npm run lint'
+                sh './node_modules/.bin/eslint --version'
+                sh './node_modules/.bin/eslint'
             }
         }
 
