@@ -65,7 +65,7 @@ export async function GET(
 // PUT /api/notes/[id] - Update a note
 export async function PUT(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		const session = await getServerSession(authOptions);
@@ -77,10 +77,12 @@ export async function PUT(
 		const body = await request.json();
 		const updateData = updateNoteSchema.parse(body);
 
+		const { id } = await params;
+
 		// Check if note exists and belongs to user
 		const existingNote = await prisma.note.findFirst({
 			where: {
-				id: params.id,
+				id: id,
 				authorId: session.user.id,
 			},
 		});
@@ -104,7 +106,7 @@ export async function PUT(
 				await prisma.note.findFirst({
 					where: {
 						slug: newSlug,
-						id: { not: params.id }, // Exclude current note
+						id: { not: id }, // Exclude current note
 					},
 				})
 			) {
@@ -116,7 +118,7 @@ export async function PUT(
 
 		const note = await prisma.note.update({
 			where: {
-				id: params.id,
+				id: id,
 			},
 			data: {
 				...updateData,
@@ -155,7 +157,7 @@ export async function PUT(
 // DELETE /api/notes/[id] - Delete a note
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		const session = await getServerSession(authOptions);
@@ -164,10 +166,12 @@ export async function DELETE(
 			return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 		}
 
+		const { id } = await params;
+
 		// Check if note exists and belongs to user
 		const existingNote = await prisma.note.findFirst({
 			where: {
-				id: params.id,
+				id: id,
 				authorId: session.user.id,
 			},
 		});
@@ -178,7 +182,7 @@ export async function DELETE(
 
 		await prisma.note.delete({
 			where: {
-				id: params.id,
+				id: id,
 			},
 		});
 

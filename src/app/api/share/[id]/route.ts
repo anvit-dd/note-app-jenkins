@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		const session = await getServerSession(authOptions);
@@ -14,12 +14,12 @@ export async function DELETE(
 			return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 		}
 
-		const linkId = params.id;
+		const { id } = await params;
 
 		// Find the share link and verify ownership
 		const shareLink = await prisma.shareLink.findFirst({
 			where: {
-				id: linkId,
+				id: id,
 				createdBy: session.user.id,
 			},
 		});
@@ -33,7 +33,7 @@ export async function DELETE(
 
 		// Delete the share link
 		await prisma.shareLink.delete({
-			where: { id: linkId },
+			where: { id: id },
 		});
 
 		return NextResponse.json({ message: "Share link deleted successfully" });
