@@ -38,7 +38,7 @@ async function getSharedNote(token: string): Promise<SharedNote | null> {
 export default async function SharedNotePage({
 	params,
 }: {
-	params: { token: string };
+	params: Promise<{ token: string }>;
 }) {
 	const { token } = await params;
 	const note = await getSharedNote(token);
