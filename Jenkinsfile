@@ -26,10 +26,9 @@ pipeline {
     //    - Check "Install automatically" → Select Node.js 20.x
     // 3. Uncomment the tools block below:
     //
-    // Uncomment the tools block below after installing and configuring NodeJS Plugin:
-    // tools {
-    //     nodejs 'NodeJS-20'  // Replace 'NodeJS-20' with your Node.js installation name
-    // }
+    tools {
+        nodejs 'nodejs-20'  // Using Node.js 20 configured in Jenkins
+    }
     //
     // METHOD 2: Automatic installation (may require sudo/admin permissions)
     // The pipeline will attempt to install Node.js automatically if plugin is not used
