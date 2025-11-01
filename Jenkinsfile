@@ -59,33 +59,28 @@ pipeline {
         }
 
         stage('Package') {
-            steps {
-                echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
-                sh 'npm run build'
-                
-                echo '📦 Building and pushing Docker image...'
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-registry-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                            # Build Docker image
-                            docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} .
-                            docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_IMAGE_NAME}:latest
-                            
-                            # Login to Docker registry
-                            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin docker.io
-                            
-                            # Push image to registry
-                            docker push ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}
-                            docker push ${DOCKER_IMAGE_NAME}:latest
-                            
-                            # Logout
-                            docker logout docker.io
-                            
-                            echo "✅ Docker image pushed: ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
-                        '''
-                    }
-                }
-            }
+        steps {
+            echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
+            sh 'npm run build'
+        
+            echo '📦 Building and pushing Docker image...'
+            sh '''
+                # Build Docker image
+                docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} .
+                docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_IMAGE_NAME}:latest
+            
+                # Login to Docker registry using environment vars
+                echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin docker.io
+            
+                # Push image to registry
+                docker push ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}
+                docker push ${DOCKER_IMAGE_NAME}:latest
+            
+                # Logout
+                docker logout docker.io
+            
+                echo "✅ Docker image pushed: ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+            '''
         }
     }
 
