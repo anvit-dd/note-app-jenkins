@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'docker:27.0'
+            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     tools {
         nodejs 'NodeJS-24'
@@ -55,12 +60,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        agent {
-            docker {
-                image 'docker:27.0'     // or latest version
-                args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
             }
         }
 
