@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "share_links" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
