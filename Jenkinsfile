@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    // Automatic build triggers
+    // Note: GitHub webhook is configured in Jenkins job settings (Build Triggers section)
+    // After configuring webhook in Jenkins UI, builds will trigger automatically on push
+    // 
+    // Alternative: Uncomment below to use SCM polling instead of webhook
+    // triggers {
+    //     pollSCM('H/5 * * * *') // Poll every 5 minutes
+    // }
+
     environment {
         NODE_VERSION = '20'
         NPM_REGISTRY = 'https://registry.npmjs.org/'

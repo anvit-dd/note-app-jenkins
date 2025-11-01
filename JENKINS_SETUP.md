@@ -138,33 +138,108 @@ Create a `.env` file in Jenkins or configure environment variables:
 2. Click **Build Now**
 3. Monitor the build progress in **Build History**
 
-### Automatic Triggers
+### Automatic Triggers (Build on GitHub Push)
 
-Configure automatic builds on:
+Configure automatic builds when code is pushed to GitHub:
 
-#### GitHub Webhook (Recommended)
+#### Step 1: Install Required Jenkins Plugin
+
+1. Go to **Manage Jenkins** → **Manage Plugins** → **Available**
+2. Search for and install: **GitHub plugin** (if not already installed)
+3. Restart Jenkins if prompted
+
+#### Step 2: Configure GitHub Webhook in Jenkins Job
+
+1. Open your Jenkins pipeline job (e.g., `note-app-pipeline`)
+2. Click **Configure**
+3. Scroll down to **Build Triggers** section
+4. Check ✅ **GitHub hook trigger for GITScm polling**
+   - This enables Jenkins to receive webhook notifications from GitHub
+5. Click **Save**
+
+#### Step 3: Configure Webhook in GitHub Repository
+
+1. Go to your GitHub repository (e.g., `https://github.com/your-username/note-app-jenkins`)
+2. Click **Settings** → **Webhooks** → **Add webhook**
+3. Configure the webhook:
+   - **Payload URL**: 
+     ```
+     http://your-jenkins-server-url/github-webhook/
+     ```
+     - Replace `your-jenkins-server-url` with your actual Jenkins URL
+     - Examples:
+       - `http://jenkins.example.com/github-webhook/`
+       - `http://192.168.1.100:8080/github-webhook/`
+       - `https://jenkins.yourdomain.com/github-webhook/` (if using HTTPS)
+   
+   - **Content type**: Select `application/json`
+   
+   - **Secret** (optional but recommended): 
+     - Generate a secret string
+     - Add the same secret in Jenkins job configuration
+   
+   - **Which events would you like to trigger this webhook?**:
+     - Select **Just the push event** (recommended)
+     - Or select **Let me select individual events** → Check **Pushes**
+   
+   - **Active**: ✅ Checked
+   
+4. Click **Add webhook**
+
+#### Step 4: Verify Webhook Configuration
+
+1. After adding the webhook, GitHub will test it by sending a ping
+2. Check the webhook delivery status:
+   - Green checkmark ✅ = Webhook delivered successfully
+   - Red X ❌ = Webhook delivery failed (check URL and Jenkins accessibility)
+3. If delivery fails, check:
+   - Jenkins server is accessible from the internet (if using public GitHub)
+   - Jenkins URL is correct
+   - GitHub plugin is installed in Jenkins
+   - Firewall allows incoming connections on Jenkins port
+
+#### Step 5: Test Automatic Build
+
+1. Make a small change in your repository (e.g., update README.md)
+2. Commit and push to GitHub:
+   ```bash
+   git add .
+   git commit -m "Test webhook trigger"
+   git push origin main
+   ```
+3. Check Jenkins dashboard - a new build should automatically start within seconds
+4. View the build logs to confirm it was triggered by the webhook
+
+#### Alternative: Poll SCM (If Webhook Doesn't Work)
+
+If webhook setup is not possible, use SCM polling as a fallback:
 
 1. In Jenkins job configuration → **Build Triggers**
-2. Check **GitHub hook trigger for GITScm polling**
-
-3. In GitHub repository:
-   - Go to **Settings** → **Webhooks**
-   - Add webhook:
-     - **Payload URL**: `http://your-jenkins-url/github-webhook/`
-     - **Content type**: `application/json`
-     - **Events**: Select **Just the push event**
-     - Click **Add webhook**
-
-#### Poll SCM
-
-1. In job configuration → **Build Triggers**
 2. Check **Poll SCM**
-3. Enter schedule: `H/5 * * * *` (every 5 minutes)
+3. Enter schedule: `H/5 * * * *` (checks every 5 minutes)
+   - Or `H/2 * * * *` for every 2 minutes
+   - Cron syntax: `H/5 * * * *` means "every 5 minutes"
+4. This is less efficient than webhooks but works without network access
 
-#### Build on Push
+#### Troubleshooting Webhook Issues
 
-1. In job configuration → **Build Triggers**
-2. Check **Build when a change is pushed to GitLab** (if using GitLab)
+**Problem**: Webhook shows "Failed to connect" or "Couldn't deliver"
+- **Solution**: 
+  - Ensure Jenkins is accessible from the internet (use ngrok for local Jenkins)
+  - Check firewall settings
+  - Verify Jenkins URL is correct and includes `/github-webhook/` endpoint
+  - Test by visiting the webhook URL in browser (should show "Hook configured successfully")
+
+**Problem**: Webhook delivers but build doesn't start
+- **Solution**:
+  - Verify "GitHub hook trigger for GITScm polling" is checked in job configuration
+  - Check Jenkins logs: `Manage Jenkins` → `System Log`
+  - Ensure GitHub plugin is installed and up to date
+
+**Problem**: Build starts but checks out wrong branch
+- **Solution**:
+  - Check branch configuration in Jenkinsfile: `branches: [[name: '*/main']]`
+  - Ensure you're pushing to the correct branch (main/master)
 
 ## Viewing Results
 
