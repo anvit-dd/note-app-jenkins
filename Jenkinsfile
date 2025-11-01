@@ -30,12 +30,12 @@ pipeline {
             }
         }
 
-        // stage('Lint') {
-        //     steps {
-        //         echo '🔍 Running ESLint...'
-        //         sh 'npm run lint'
-        //     }
-        // }
+        stage('Lint') {
+            steps {
+                echo '🔍 Running ESLint...'
+                sh 'npm run lint'
+            }
+        }
 
         stage('Test') {
             steps {
