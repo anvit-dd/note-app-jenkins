@@ -8,6 +8,7 @@ pipeline {
     environment {
         NODE_ENV = 'production'
         NEXT_SWC_PATH = "${WORKSPACE}/node_modules/@next/swc-wasm-nodejs/wasm.js"
+        CSS_TRANSFORMER_WASM = '1'
     }
 
     options {
