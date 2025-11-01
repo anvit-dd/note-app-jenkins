@@ -15,18 +15,25 @@ pipeline {
         NPM_REGISTRY = 'https://registry.npmjs.org/'
     }
 
-    // IMPORTANT: Configure Node.js using one of these methods:
+    // ============================================================================
+    // IMPORTANT: Node.js Setup
+    // ============================================================================
     // 
-    // METHOD 1 (Recommended): Use Jenkins Node.js Plugin
-    // 1. Install "NodeJS Plugin" in Jenkins: Manage Jenkins → Plugins
-    // 2. Configure Node.js: Manage Jenkins → Global Tool Configuration → NodeJS
-    // 3. Uncomment and configure the tools block below:
+    // METHOD 1 (RECOMMENDED - Most Reliable): Use Jenkins Node.js Plugin
+    // 1. Install "NodeJS Plugin": Manage Jenkins → Plugins → Search "NodeJS Plugin"
+    // 2. Configure: Manage Jenkins → Global Tool Configuration → NodeJS → Add NodeJS
+    //    - Name: NodeJS-20
+    //    - Check "Install automatically" → Select Node.js 20.x
+    // 3. Uncomment the tools block below:
+    //
+    // Uncomment the tools block below after installing and configuring NodeJS Plugin:
     // tools {
-    //     nodejs 'NodeJS-20'  // Replace with your Node.js installation name
+    //     nodejs 'NodeJS-20'  // Replace 'NodeJS-20' with your Node.js installation name
     // }
     //
-    // METHOD 2: Ensure Node.js is installed on Jenkins agent and in PATH
-    // The pipeline will attempt to install Node.js automatically if not found
+    // METHOD 2: Automatic installation (may require sudo/admin permissions)
+    // The pipeline will attempt to install Node.js automatically if plugin is not used
+    // ============================================================================
 
     stages {
         stage('Git Code Checkout') {
@@ -57,114 +64,78 @@ pipeline {
             }
         }
 
-        stage('Setup Node.js and Install Dependencies') {
+        stage('Install Dependencies') {
             steps {
                 script {
-                    echo '🔧 Setting up Node.js and installing dependencies...'
+                    echo '📦 Installing Node.js dependencies...'
                     sh '''
-                        # Function to setup Node.js
-                        setup_nodejs() {
-                            # Check if Node.js is already installed
-                            if command -v node &> /dev/null; then
-                                echo "✅ Node.js found: $(node --version)"
-                                echo "✅ npm found: $(npm --version)"
-                                return 0
-                            fi
+                        # Check if Node.js is available (from Jenkins plugin or system)
+                        if command -v node &> /dev/null; then
+                            echo "✅ Node.js found: $(node --version)"
+                            echo "✅ npm found: $(npm --version)"
+                            NODE_AVAILABLE=true
+                        else
+                            echo "⚠️  Node.js not found in PATH. Checking common locations..."
                             
-                            echo "📥 Node.js not found. Attempting installation..."
-                            
-                            # Try to use nvm if it exists
+                            # Check if nvm is installed and source it
                             if [ -d "$HOME/.nvm" ]; then
                                 export NVM_DIR="$HOME/.nvm"
                                 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                                if command -v nvm &> /dev/null; then
-                                    echo "Using existing nvm..."
-                                    nvm install 20 || nvm install --lts || {
-                                        echo "⚠️  nvm install failed"
-                                        return 1
-                                    }
-                                    nvm use 20 || nvm use --lts || {
-                                        echo "⚠️  nvm use failed"
-                                        return 1
-                                    }
-                                    return 0
+                                if command -v nvm &> /dev/null && command -v node &> /dev/null; then
+                                    echo "✅ Node.js found via nvm: $(node --version)"
+                                    NODE_AVAILABLE=true
                                 fi
                             fi
                             
-                            # Try to install nvm
-                            echo "Installing nvm..."
-                            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash || {
-                                echo "⚠️  nvm installation failed, trying direct Node.js installation..."
-                                
-                                # Try direct installation for Debian/Ubuntu
-                                if command -v apt-get &> /dev/null; then
-                                    echo "Attempting to install Node.js via apt-get..."
-                                    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - || {
-                                        echo "❌ Failed to setup Node.js repository"
-                                        return 1
-                                    }
-                                    apt-get install -y nodejs || {
-                                        echo "❌ Failed to install Node.js via apt-get"
-                                        return 1
-                                    }
-                                    return 0
-                                # Try direct installation for RHEL/CentOS
-                                elif command -v yum &> /dev/null; then
-                                    echo "Attempting to install Node.js via yum..."
-                                    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - || {
-                                        echo "❌ Failed to setup Node.js repository"
-                                        return 1
-                                    }
-                                    yum install -y nodejs npm || {
-                                        echo "❌ Failed to install Node.js via yum"
-                                        return 1
-                                    }
-                                    return 0
-                                else
-                                    echo "❌ Unsupported system. Please install Node.js manually on the Jenkins agent."
-                                    echo "Or install NodeJS Plugin in Jenkins and configure it."
-                                    return 1
+                            # Check common installation paths
+                            for NODE_PATH in /usr/bin/node /usr/local/bin/node "$HOME/.local/bin/node"; do
+                                if [ -f "$NODE_PATH" ] && [ -x "$NODE_PATH" ]; then
+                                    export PATH="$(dirname $NODE_PATH):$PATH"
+                                    if command -v node &> /dev/null; then
+                                        echo "✅ Node.js found at $NODE_PATH: $(node --version)"
+                                        NODE_AVAILABLE=true
+                                        break
+                                    fi
                                 fi
-                            }
+                            done
                             
-                            # Source nvm after installation
-                            export NVM_DIR="$HOME/.nvm"
-                            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                            
-                            # Install Node.js via nvm
-                            nvm install 20 || nvm install --lts || {
-                                echo "❌ Failed to install Node.js via nvm"
-                                return 1
-                            }
-                            nvm use 20 || nvm use --lts || {
-                                echo "❌ Failed to use Node.js via nvm"
-                                return 1
-                            }
-                            
-                            return 0
-                        }
-                        
-                        # Setup Node.js
-                        if ! setup_nodejs; then
-                            echo "❌ Node.js setup failed. Please install Node.js manually or use Jenkins Node.js Plugin."
-                            exit 1
+                            # Final check
+                            if ! command -v node &> /dev/null; then
+                                echo ""
+                                echo "❌❌❌ Node.js is not installed or not in PATH ❌❌❌"
+                                echo ""
+                                echo "SOLUTION 1 (Recommended): Use Jenkins Node.js Plugin"
+                                echo "  1. Go to: Manage Jenkins → Manage Plugins → Available"
+                                echo "  2. Search and install: 'NodeJS Plugin'"
+                                echo "  3. Go to: Manage Jenkins → Global Tool Configuration → NodeJS"
+                                echo "  4. Click 'Add NodeJS' → Name: NodeJS-20"
+                                echo "  5. Check 'Install automatically' → Select Node.js 20.x → Save"
+                                echo "  6. In Jenkinsfile, uncomment: tools { nodejs 'NodeJS-20' }"
+                                echo ""
+                                echo "SOLUTION 2: Install Node.js on Jenkins agent manually:"
+                                echo "  For Ubuntu/Debian:"
+                                echo "    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+                                echo "    sudo apt-get install -y nodejs"
+                                echo ""
+                                echo "  For CentOS/RHEL:"
+                                echo "    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -"
+                                echo "    sudo yum install -y nodejs npm"
+                                echo ""
+                                echo "  Or download from: https://nodejs.org/"
+                                echo ""
+                                exit 1
+                            fi
                         fi
                         
-                        # Ensure Node.js is in PATH (for nvm installations)
-                        if [ -d "$HOME/.nvm" ]; then
-                            export NVM_DIR="$HOME/.nvm"
-                            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
-                            nvm use 20 2>/dev/null || nvm use --lts 2>/dev/null || true
-                        fi
-                        
-                        # Verify Node.js is available
-                        if ! command -v node &> /dev/null; then
-                            echo "❌ Node.js is still not available after setup. Check installation."
+                        # Final verification
+                        if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
+                            echo "❌ Node.js or npm is not available"
                             exit 1
                         fi
                         
                         echo "✅ Using Node.js: $(node --version)"
                         echo "✅ Using npm: $(npm --version)"
+                        echo ""
                         
                         # Install dependencies
                         echo "📦 Checking for package-lock.json..."
@@ -179,7 +150,7 @@ pipeline {
                         npm ci --prefer-offline --no-audit || {
                             echo "⚠️  npm ci failed, trying npm install as fallback..."
                             npm install --no-audit || {
-                                echo "❌ npm install also failed"
+                                echo "❌ npm install failed. Check error messages above."
                                 exit 1
                             }
                         }
