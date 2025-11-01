@@ -9,6 +9,8 @@ pipeline {
         NODE_ENV = 'production'
         NEXT_SWC_PATH = "${WORKSPACE}/node_modules/@next/swc-wasm-nodejs/wasm.js"
         CSS_TRANSFORMER_WASM = '1'
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/${DOCKER_USER}/${JOB_NAME}"
     }
 
     options {
@@ -56,23 +58,33 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Package') {
             steps {
                 echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
                 sh 'npm run build'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                echo '📦 Packaging application...'
-                sh '''
-                    mkdir -p dist
-                    tar -czf dist/nextjs-app-${BUILD_NUMBER}.tar.gz \
-                        .next public package.json package-lock.json next.config.* tsconfig.* \
-                        --exclude=node_modules --exclude=.git
-                '''
-                archiveArtifacts artifacts: 'dist/*.tar.gz', fingerprint: true
+                
+                echo '📦 Building and pushing Docker image...'
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-registry-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            # Build Docker image
+                            docker build -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} .
+                            docker tag ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ${DOCKER_IMAGE_NAME}:latest
+                            
+                            # Login to Docker registry
+                            echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin docker.io
+                            
+                            # Push image to registry
+                            docker push ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}
+                            docker push ${DOCKER_IMAGE_NAME}:latest
+                            
+                            # Logout
+                            docker logout docker.io
+                            
+                            echo "✅ Docker image pushed: ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}"
+                        '''
+                    }
+                }
             }
         }
     }
