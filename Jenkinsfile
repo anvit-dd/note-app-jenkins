@@ -26,7 +26,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo '📦 Installing dependencies (including dev)...'
-                sh 'NPM_CONFIG_PRODUCTION=false npm ci'
+                sh 'npm ci'
             }
         }
 
