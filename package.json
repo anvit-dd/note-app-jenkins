@@ -4,8 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "next build --turbopack",
-		"build:compat": "next build",
+		"build": "next build",
+		"build:turbopack": "next build --turbopack",
 		"start": "next start",
 		"lint": "eslint .",
 		"test": "jest",

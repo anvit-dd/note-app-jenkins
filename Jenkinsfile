@@ -59,7 +59,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo '🔨 Building Next.js app (without Turbopack for arm64 compatibility)...'
-                sh 'npm run build:compat'
+                sh 'npm run build'
             }
         }
 
