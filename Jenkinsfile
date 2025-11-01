@@ -15,11 +15,10 @@ pipeline {
         NPM_REGISTRY = 'https://registry.npmjs.org/'
     }
 
-    tools {
-        // Uncomment and configure if Node.js plugin is installed in Jenkins
-        // Replace 'NodeJS-20' with the name of your Node.js installation in Jenkins
-        // nodejs 'NodeJS-20'
-    }
+    // To use Node.js plugin, uncomment and configure the tools block below:
+    // tools {
+    //     nodejs 'NodeJS-20'  // Replace 'NodeJS-20' with your Node.js installation name in Jenkins
+    // }
 
     stages {
         stage('Git Code Checkout') {
