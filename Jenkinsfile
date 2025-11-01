@@ -102,7 +102,7 @@ pipeline {
                             # Source nvm and install Node.js
                             if [ -d "$HOME/.nvm" ]; then
                                 export NVM_DIR="$HOME/.nvm"
-                                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                                [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
                                 nvm install 20 || {
                                     echo "❌ Failed to install Node.js 20 via nvm"
                                     exit 1
@@ -132,7 +132,7 @@ pipeline {
                         # Ensure Node.js is available (source nvm if it was installed)
                         if [ -d "$HOME/.nvm" ]; then
                             export NVM_DIR="$HOME/.nvm"
-                            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                            [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
                             nvm use 20 2>/dev/null || true
                         fi
                         
