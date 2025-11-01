@@ -26,7 +26,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo '📦 Installing dependencies (including dev)...'
-                sh 'npm i'
+                sh 'npm i --include=dev'
             }
         }
 
