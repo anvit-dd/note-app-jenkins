@@ -108,7 +108,7 @@ pipeline {
 
 							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
 
-							# Check if sshpass is available for password authentication
+							# Check if sshpass is available and password is set
 							if command -v sshpass >/dev/null 2>&1 && [ -n "$DEPLOY_PASSWORD" ]; then
 								echo "🔑 Using password authentication with sshpass..."
 								sshpass -p "$DEPLOY_PASSWORD" ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
@@ -129,24 +129,10 @@ ${REMOTE_RUN_COMMAND}
 sudo docker ps --filter "name=${CONTAINER_NAME}"
 EOF
 							else
-								echo "🔑 Using SSH key authentication..."
-								ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
-set -eu
-
-echo "🛑 Stopping running containers..."
-docker ps -q | xargs -r sudo docker stop || true
-
-echo "🧹 Removing container ${CONTAINER_NAME} if it exists..."
-sudo docker rm -f ${CONTAINER_NAME} || true
-
-echo "⬇️  Pulling latest image ${DOCKER_IMAGE_NAME}:latest..."
-sudo docker pull ${DOCKER_IMAGE_NAME}:latest
-
-echo "🚀 Starting container with latest image..."
-${REMOTE_RUN_COMMAND}
-
-sudo docker ps --filter "name=${CONTAINER_NAME}"
-EOF
+								echo "❌ Neither sshpass nor SSH key credentials are available!"
+								echo "   - For password auth: Install sshpass and set DEPLOY_PASSWORD"
+								echo "   - For key auth: Set DEPLOY_SSH_CREDENTIALS_ID with SSH private key"
+								exit 1
 							fi
 						'''
 					}
