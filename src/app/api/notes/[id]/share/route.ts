@@ -109,7 +109,7 @@ export async function GET() {
 			},
 		});
 
-		const formattedLinks = shareLinks.map((link) => ({
+		const formattedLinks = shareLinks.map((link: typeof shareLinks[number]) => ({
 			id: link.id,
 			token: link.token,
 			expiresAt: link.expiresAt,
