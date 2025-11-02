@@ -11,9 +11,9 @@ pipeline {
 		CSS_TRANSFORMER_WASM = '1'
 		DOCKER_REGISTRY = 'docker.io'
 		DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/${DOCKER_USER}/${JOB_NAME}"
-        DEPLOY_USERNAME = "${DEPLOY_USER}"
-        DEPLOY_SERVER = "${DEPLOY_SERVER}"
-        DEPLOY_PASSWORD = "${DEPLOY_PASS}"
+        DEPLOY_USER = "${DEPLOY_USER}"
+        DEPLOY_HOST = "${DEPLOY_SERVER}"
+        DEPLOY_SSH_PASSWORD_ID = "deploy-ssh-password"
 	}
 
 	options {
@@ -111,16 +111,13 @@ pipeline {
 set -eu
 
 echo "🛑 Stopping running containers..."
-CONTAINERS=\$(docker ps -q)
-if [ -n "\$CONTAINERS" ]; then
-	docker stop \$CONTAINERS
-fi
+docker ps -q | xargs -r sudo docker stop || true
 
 echo "🧹 Removing container ${CONTAINER_NAME} if it exists..."
-docker rm -f ${CONTAINER_NAME} || true
+sudo docker rm -f ${CONTAINER_NAME} || true
 
 echo "⬇️  Pulling latest image ${DOCKER_IMAGE_NAME}:latest..."
-docker pull ${DOCKER_IMAGE_NAME}:latest
+sudo docker pull ${DOCKER_IMAGE_NAME}:latest
 
 echo "🚀 Starting container with latest image..."
 ${REMOTE_RUN_COMMAND}
