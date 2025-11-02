@@ -97,18 +97,17 @@ pipeline {
 						return
 					}
 
-					def deployStep = {
-						sh '''
-							set -eu
+					sh '''
+						set -eu
 
-							SSH_PORT="${DEPLOY_SSH_PORT:-22}"
-							CONTAINER_NAME="${DOCKER_CONTAINER_NAME:-note-app}"
-							APP_PORT_VALUE="${APP_PORT:-3000}"
-							REMOTE_RUN_COMMAND="${DEPLOY_RUN_COMMAND:-docker run -d --restart unless-stopped --name ${CONTAINER_NAME} -p ${APP_PORT_VALUE}:${APP_PORT_VALUE} ${DOCKER_IMAGE_NAME}:latest}"
+						SSH_PORT="${DEPLOY_SSH_PORT:-22}"
+						CONTAINER_NAME="${DOCKER_CONTAINER_NAME:-note-app}"
+						APP_PORT_VALUE="${APP_PORT:-3000}"
+						REMOTE_RUN_COMMAND="${DEPLOY_RUN_COMMAND:-docker run -d --restart unless-stopped --name ${CONTAINER_NAME} -p ${APP_PORT_VALUE}:${APP_PORT_VALUE} ${DOCKER_IMAGE_NAME}:latest}"
 
-							echo "🔐 Connecting to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})..."
-
-							ssh -o StrictHostKeyChecking=no -p "${SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+						echo "🧪 Mock deploy: simulating SSH connection to ${DEPLOY_USER}@${DEPLOY_HOST} (port ${SSH_PORT})"
+						echo '--- Begin remote command preview ---'
+						cat <<'MOCK'
 set -eu
 
 echo "🛑 Stopping running containers..."
@@ -127,18 +126,8 @@ echo "🚀 Starting container with latest image..."
 ${REMOTE_RUN_COMMAND}
 
 docker ps --filter "name=${CONTAINER_NAME}"
-EOF
-						'''
-					}
-
-					def credentialId = env.DEPLOY_SSH_CREDENTIALS_ID?.trim()
-					if (credentialId) {
-						sshagent(credentials: [credentialId]) {
-							deployStep()
-						}
-					} else {
-						deployStep()
-					}
+						echo '--- End remote command preview ---'
+					'''
 				}
 			}
 		}
